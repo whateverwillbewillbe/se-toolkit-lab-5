@@ -1,7 +1,10 @@
 import { useState, useEffect, useReducer, FormEvent } from 'react'
 import './App.css'
+import Dashboard from './Dashboard'
 
 const STORAGE_KEY = 'api_key'
+
+type Page = 'items' | 'dashboard'
 
 interface Item {
   id: number
@@ -37,6 +40,7 @@ function App() {
     () => localStorage.getItem(STORAGE_KEY) ?? '',
   )
   const [draft, setDraft] = useState('')
+  const [currentPage, setCurrentPage] = useState<Page>('items')
   const [fetchState, dispatch] = useReducer(fetchReducer, { status: 'idle' })
 
   useEffect(() => {
@@ -69,6 +73,11 @@ function App() {
     localStorage.removeItem(STORAGE_KEY)
     setToken('')
     setDraft('')
+    setCurrentPage('items')
+  }
+
+  function navigateTo(page: Page) {
+    setCurrentPage(page)
   }
 
   if (!token) {
@@ -90,7 +99,20 @@ function App() {
   return (
     <div>
       <header className="app-header">
-        <h1>Items</h1>
+        <nav className="app-nav">
+          <button
+            className={currentPage === 'items' ? 'active' : ''}
+            onClick={() => navigateTo('items')}
+          >
+            Items
+          </button>
+          <button
+            className={currentPage === 'dashboard' ? 'active' : ''}
+            onClick={() => navigateTo('dashboard')}
+          >
+            Dashboard
+          </button>
+        </nav>
         <button className="btn-disconnect" onClick={handleDisconnect}>
           Disconnect
         </button>
@@ -99,7 +121,7 @@ function App() {
       {fetchState.status === 'loading' && <p>Loading...</p>}
       {fetchState.status === 'error' && <p>Error: {fetchState.message}</p>}
 
-      {fetchState.status === 'success' && (
+      {fetchState.status === 'success' && currentPage === 'items' && (
         <table>
           <thead>
             <tr>
@@ -121,6 +143,8 @@ function App() {
           </tbody>
         </table>
       )}
+
+      {currentPage === 'dashboard' && <Dashboard token={token} />}
     </div>
   )
 }
